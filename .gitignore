@@ -11,3 +11,13 @@
 *.lai
 *.la
 *.a
+
+# Autoconf generated files
+*.swp
+.deps/
+autom4te.cache/
+Makefile
+Makefile.in
+config.log
+config.status
+configure
