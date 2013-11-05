@@ -21,3 +21,19 @@ Makefile.in
 config.log
 config.status
 configure
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# Intellij
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Eclipse
+.classpath
+.project
