@@ -33,7 +33,7 @@ public class Wight {
             logFile.setFormatter(new SimpleFormatter());
             L.addHandler(logFile);
         } catch (IOException e) {
-            System.err.println("(101) Could configure the logger!");
+            System.err.println("(101) Could not configure the logger!");
             System.exit(101);
         }
 
@@ -47,7 +47,6 @@ public class Wight {
         } catch (IOException ioe) {
             L.log(Level.SEVERE, "Could not find the shares to scan: " + ioe.getStackTrace());
             System.err.println("(102) Could not find the shares to scan. See the log for more information.");
-            System.err.println(ioe.getStackTrace());
             System.exit(102);
         }
 
