@@ -34,12 +34,37 @@ public class Wight {
     private static IndexWriter IW = null;
 
     public static void main(String[] args) {
-        if (args.length == 1 && args[0].equals("--help")) {
-            System.out.println("wight: a crawler for sasha\n" +
-                "--------------------------\n" +
-                "wight will index all folders mounted on the /scan folder on the CWD.");
+        //
+        // Process the input args
+        //
+
+        if (args.length > 0 && ("-h".equals(args[0]) || "-help".equals(args[0]))) {
+            System.out.println(
+                    "wight: a crawler for sasha\n" +
+                            "--------------------------\n" +
+                            "Usage:\twight [-scanpath dir] [-indexpath dir]\n");
             System.exit(0);
         }
+
+        Path scanPath = Paths.get("scan");
+        String indexPath = "index";
+
+        for (int i = 0; i < args.length; ++i) {
+            if ("-scanpath".equals(args[i])) {
+                scanPath = Paths.get(args[i+1]);
+                ++i;
+            } else if ("-indexpath".equals(args[i])) {
+                indexPath = args[i+1];
+                ++i;
+            } else {
+                System.err.println("(105) Unknown argument: " + args[i]);
+                System.exit(105);
+            }
+        }
+
+        //
+        // Setting things up
+        //
 
         try {
             String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
@@ -52,17 +77,19 @@ public class Wight {
         }
 
         try {
-            Directory indexDir = FSDirectory.open(new java.io.File("index"));
+            Directory indexDir = FSDirectory.open(new java.io.File(indexPath));
             Analyzer analyzer = new SashaAnalyzer(Version.LUCENE_45);
             IndexWriterConfig iwc = new IndexWriterConfig(Version.LUCENE_45, analyzer);
             IW = new IndexWriter(indexDir, iwc);
         } catch (IOException ioe) {
-            L.log(Level.SEVERE, "Could not open Lucene index: " + ioe);
+            L.log(Level.SEVERE, "Could not open Lucene index at" + indexPath + ": " + ioe);
             System.err.println("(103) Could not open the Lucene index! See the log for more information.");
             System.exit(103);
         }
 
-        final Path scanPath = Paths.get("scan");
+        //
+        // Scan
+        //
 
         L.log(Level.INFO, "Scanning on: " + scanPath.toAbsolutePath());
 
@@ -91,6 +118,10 @@ public class Wight {
 
             L.log(Level.INFO, "Found " + filesFound[0] + " files on share: " + share);
         });
+
+        //
+        // Shutting down
+        //
 
         try {
             IW.close();
