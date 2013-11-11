@@ -1,4 +1,4 @@
-package br.ita.roim.sasha.utils;
+package br.ita.roim.sasha.wight.utils;
 
 import javafx.util.Pair;
 
@@ -37,7 +37,7 @@ public class FileScanner {
         Files.walkFileTree(root, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                action.accept(new Pair(file, attrs));
+                action.accept(new Pair<>(file, attrs));
                 return FileVisitResult.CONTINUE;
             }
         });

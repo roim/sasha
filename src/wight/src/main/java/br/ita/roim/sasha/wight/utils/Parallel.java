@@ -21,7 +21,7 @@
  * THE SOFTWARE.
  */
 
-package br.ita.roim.sasha.utils;
+package br.ita.roim.sasha.wight.utils;
 
 import br.ita.roim.sasha.wight.Wight;
 
@@ -29,11 +29,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
@@ -88,7 +84,7 @@ public class Parallel {
                         operation.accept(element);
                     } catch (Exception e) {
                         //TODO, roim, maybe we should rethrow the exception to handle the logging on the consumer.
-                        Wight.L.log(Level.WARNING, "Exception on Parallel.For: " + e.getStackTrace());
+                        Wight.L.log(Level.WARNING, "Exception on Parallel.For: " + e);
                     }
                 }
                 return null;
