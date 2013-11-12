@@ -9,6 +9,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
@@ -42,23 +43,38 @@ public class Wight {
             System.out.println(
                     "wight: a crawler for sasha\n" +
                             "--------------------------\n" +
-                            "Usage:\twight [-scanpath dir] [-indexpath dir]\n");
+                            "Usage:\twight [-scanpath dir] [-indexpath dir] [-clean timeoutHours]\n");
             System.exit(0);
         }
 
         Path scanPath = Paths.get("scan");
         String indexPath = "index";
+        long timeoutHours = 24*7;
+        boolean shouldClean = false;
 
         for (int i = 0; i < args.length; ++i) {
-            if ("-scanpath".equals(args[i])) {
-                scanPath = Paths.get(args[i+1]);
-                ++i;
-            } else if ("-indexpath".equals(args[i])) {
-                indexPath = args[i+1];
-                ++i;
-            } else {
-                System.err.println("(105) Unknown argument: " + args[i]);
-                System.exit(105);
+            switch (args[i]) {
+                case "-scanpath":
+                    scanPath = Paths.get(args[i + 1]);
+                    ++i;
+                    break;
+                case "-indexpath":
+                    indexPath = args[i + 1];
+                    ++i;
+                    break;
+                case "-clean":
+                    shouldClean = true;
+                    try {
+                        timeoutHours = Integer.parseInt(args[i + 1]);
+                    } catch (NumberFormatException nfe) {
+                        System.err.println("(105) Invalid timeout argument: " + args[i + 1]);
+                        System.exit(105);
+                    }
+                    ++i;
+                    break;
+                default:
+                    System.err.println("(105) Invalid argument: " + args[i]);
+                    System.exit(105);
             }
         }
 
@@ -118,6 +134,23 @@ public class Wight {
 
             L.log(Level.INFO, "Found " + filesFound[0] + " files on share: " + share);
         });
+
+        //
+        // Clean
+        //
+
+        if (shouldClean) {
+            L.log(Level.INFO, "Cleaning old files from index, timeout is " + timeoutHours + " hours.");
+
+            final long millisecondsInAnHour = 1000*60*60;
+            final long timeoutMs = System.currentTimeMillis() - timeoutHours*millisecondsInAnHour;
+
+            try {
+                IW.deleteDocuments(NumericRangeQuery.newLongRange(FileInfo.ROW_LAST_SEEN, 0L, timeoutMs, true, true));
+            } catch (IOException ioe) {
+                L.log(Level.SEVERE, "Could not delete old files from index: " + ioe);
+            }
+        }
 
         //
         // Shutting down
