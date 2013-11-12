@@ -6,16 +6,17 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
 /**
- * Immutable file information. Contains fields/getters for the information to be stored and other convenience methods.
+ * Immutable file information. Contains a basic description of the file, and conveniences to help integrating
+ *  a file with a lucene index.
  */
 public class FileInfo {
 
-    public final String rowCompletePath = "CompletePath";
-    public final String rowExtension = "Extension";
-    public final String rowFileName = "FileName";
-    public final String rowLastSeen = "LastSeen";
-    public final String rowPath = "Path";
-    public final String rowSize = "Size";
+    public static final String ROW_COMPLETE_PATH = "CompletePath";
+    public static final String ROW_EXTENSION = "Extension";
+    public static final String ROW_FILE_NAME = "FileName";
+    public static final String ROW_LAST_SEEN = "LastSeen";
+    public static final String ROW_PATH = "Path";
+    public static final String ROW_SIZE = "Size";
 
     public final String Extension;
     public final String Name;
@@ -48,12 +49,12 @@ public class FileInfo {
      */
     public Document createDocument() {
         Document doc = new Document();
-        doc.add(new StringField(rowCompletePath, getCompletePath(), Field.Store.YES));
-        doc.add(new TextField(rowFileName, Name, Field.Store.NO));
-        doc.add(new TextField(rowPath, Path, Field.Store.NO));
-        doc.add(new TextField(rowExtension, Extension, Field.Store.NO));
-        doc.add(new LongField(rowSize, Size, Field.Store.YES));
-        doc.add(new LongField(rowLastSeen, System.currentTimeMillis(), Field.Store.YES));
+        doc.add(new StringField(ROW_COMPLETE_PATH, getCompletePath(), Field.Store.YES));
+        doc.add(new TextField(ROW_FILE_NAME, Name, Field.Store.NO));
+        doc.add(new TextField(ROW_PATH, Path, Field.Store.NO));
+        doc.add(new TextField(ROW_EXTENSION, Extension, Field.Store.NO));
+        doc.add(new LongField(ROW_SIZE, Size, Field.Store.YES));
+        doc.add(new LongField(ROW_LAST_SEEN, System.currentTimeMillis(), Field.Store.YES));
         return doc;
     }
 

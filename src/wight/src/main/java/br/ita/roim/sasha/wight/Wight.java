@@ -138,7 +138,7 @@ public class Wight {
         final FileInfo fi = new FileInfo(p.getKey(), p.getValue());
 
         try {
-            IW.updateDocument(new Term(fi.rowCompletePath, fi.getCompletePath()), fi.createDocument());
+            IW.updateDocument(new Term(FileInfo.ROW_COMPLETE_PATH, fi.getCompletePath()), fi.createDocument());
         } catch (IOException ioe) {
             //TODO, roim, this might fill the log really fast. Maybe only log the first per share?
             L.log(Level.WARNING, "Could not add/update " + fi.getCompletePath() + ": " + ioe);
