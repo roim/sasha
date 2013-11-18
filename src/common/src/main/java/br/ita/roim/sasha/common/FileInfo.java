@@ -39,7 +39,14 @@ public class FileInfo {
             Extension = "";
         }
 
-        Path = filePath.getParent().toString() + "/";
+        // At this point our path should be treated as a URL. This will adjust smb:/foo to smb://foo
+        //     notice that this won't break the filename standards, since '//' will be resolved back to '/'
+        //     if we use this as a path.
+        // We kept using java's Path and not URL up to this point, however, since SMB urls are not valid in Java.
+        //
+        String singleSlashPath = filePath.getParent().toString() + "/";
+        Path = singleSlashPath.replaceFirst(":/", "://");
+
         Size = size;
     }
 

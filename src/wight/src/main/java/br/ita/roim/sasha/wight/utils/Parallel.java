@@ -25,6 +25,8 @@ package br.ita.roim.sasha.wight.utils;
 
 import br.ita.roim.sasha.wight.Wight;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -84,7 +86,10 @@ public class Parallel {
                         operation.accept(element);
                     } catch (Exception e) {
                         //TODO, roim, maybe we should rethrow the exception to handle the logging on the consumer.
-                        Wight.L.log(Level.WARNING, "Exception on Parallel.For: " + e);
+                        StringWriter sw = new StringWriter();
+                        e.printStackTrace(new PrintWriter(sw));
+                        String exceptionAsString = sw.toString();
+                        Wight.L.log(Level.WARNING, "Exception on Parallel.For: " + exceptionAsString);
                     }
                 }
                 return null;

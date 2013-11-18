@@ -5,7 +5,7 @@ import javafx.util.Pair;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * Contains utilities to work with all files (recursively) in a folder.
@@ -33,11 +33,14 @@ public class FileScanner {
         return Files.newDirectoryStream(folder, entry -> !Files.isDirectory(entry));
     }
 
-    public void fileWalker(final Consumer<Pair<Path, BasicFileAttributes>> action) throws IOException {
+    public void fileWalker(final Predicate<Pair<Path, BasicFileAttributes>> action) throws IOException {
         Files.walkFileTree(root, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                action.accept(new Pair<>(file, attrs));
+                if (!action.test(new Pair<>(file, attrs))) {
+                    return FileVisitResult.TERMINATE;
+                }
+
                 return FileVisitResult.CONTINUE;
             }
         });
