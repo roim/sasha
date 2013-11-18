@@ -4,7 +4,6 @@ import org.apache.lucene.analysis.util.CharTokenizer;
 import org.apache.lucene.util.Version;
 
 import java.io.Reader;
-import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.Map;
 

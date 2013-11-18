@@ -163,7 +163,7 @@ public class Wight {
         });
 
         //
-        // Clean
+        // Clean index
         //
 
         if (shouldClean) {
