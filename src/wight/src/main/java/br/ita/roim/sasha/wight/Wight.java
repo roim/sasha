@@ -13,16 +13,12 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,9 +29,9 @@ public class Wight {
 
     public final static Logger L = Logger.getLogger(Wight.class.getName());
 
-    private final static int SCANNING_THREADS = 8;
+    private final static int SERVER_SCANNING_THREADS = 4;
+    private final static int SHARE_SCANNING_THREADS = 2;
     private static IndexWriter IW = null;
-    private static HashMap<String, String> servers = new HashMap<>();
 
     public static void main(String[] args) {
         //
@@ -46,27 +42,23 @@ public class Wight {
             System.out.println(
                     "wight: a crawler for sasha\n" +
                             "--------------------------\n" +
-                            "Usage:\twight [-scanpath dir] [-indexpath dir] [-clean timeoutHours]\n\n" +
-                            "wight expects a 'servers' text file on the scanpath, listing the URLs" +
-                            " associated to the folders on that path. Correct format is:\n\n" +
-                            "\tfolder1////smb://server/share\n" +
-                            "\tfolder2////ftp://server\n");
+                            "Usage:\twight [-scanpath dir] [-indexpath dir] [-clean timeoutHours]\n");
             System.exit(0);
         }
 
-        Path scanPath = Paths.get("scan");
-        String indexPath = "index";
+        Path tempScanPath = Paths.get("scan");
+        String tempIndexPath = "index";
         long timeoutHours = 24*7;
         boolean shouldClean = false;
 
         for (int i = 0; i < args.length; ++i) {
             switch (args[i]) {
                 case "-scanpath":
-                    scanPath = Paths.get(args[i + 1]);
+                    tempScanPath = Paths.get(args[i + 1]);
                     ++i;
                     break;
                 case "-indexpath":
-                    indexPath = args[i + 1];
+                    tempIndexPath = args[i + 1];
                     ++i;
                     break;
                 case "-clean":
@@ -84,6 +76,9 @@ public class Wight {
                     System.exit(105);
             }
         }
+
+        final String indexPath = tempIndexPath;
+        final Path scanPath = tempScanPath;
 
         //
         // Setting things up
@@ -116,50 +111,45 @@ public class Wight {
 
         L.log(Level.INFO, "Scanning on: " + scanPath.toAbsolutePath());
 
-        DirectoryStream<Path> shares = null;
+        Iterable<Path> servers = null;
         try {
-            shares = new FileScanner(scanPath).getSubFolders();
+            servers = new FileScanner(scanPath).getSubFolders( scanPath.getNameCount() + 2 );
         } catch (IOException ioe) {
-            L.log(Level.SEVERE, "Could not find the shares to scan: " + ioe);
-            System.err.println("(102) Could not find the shares to scan! See the log for more information.");
+            L.log(Level.SEVERE, "Could not find the servers to scan: " + ioe);
+            System.err.println("(102) Could not find the servers to scan! See the log for more information.");
             System.exit(102);
         }
 
-        try {
-            readServerList(scanPath);
-        } catch (IOException e) {
-            L.log(Level.WARNING, "Could not read 'servers' file in " + scanPath);
-        }
+        Parallel.blockingFor(SERVER_SCANNING_THREADS, servers, (server) -> {
+            L.log(Level.INFO, "Starting scan on server: " + server);
 
-        Parallel.blockingFor(SCANNING_THREADS, shares, (share) -> {
-            L.log(Level.INFO, "Starting scan on share: " + share);
-
-            final String serverUrl = servers.get(share.toString());
-
-            if (serverUrl == null) {
-                L.log(Level.SEVERE, "No server info found for " + share + ". Share will be ignored." +
-                        " Ensure the information is present in the 'servers' file. Use './wight -help' for more information.");
+            Iterable<Path> shares = null;
+            try {
+                shares = new FileScanner(server).getSubFolders( scanPath.getNameCount() + 3 );
+            } catch (IOException ioe) {
+                L.log(Level.SEVERE, "Could not find the shares on " + server + ": " + ioe);
                 return;
             }
 
-            final long[] filesFound = {0};
-            final FileScanner shareScanner = new FileScanner(share);
-            try {
-                shareScanner.fileWalker(p -> {
-                    Path adjustedPath = Paths.get(p.getKey().toString().replaceFirst(share.toString(), serverUrl));
+            Parallel.blockingFor(SHARE_SCANNING_THREADS, shares, (share) -> {
+                L.log(Level.INFO, "Starting scan on " + share);
+                final long[] filesFound = {0};
+                final FileScanner shareScanner = new FileScanner(share);
+                try {
+                    shareScanner.fileWalker(p -> {
+                        if (!acceptFile(scanPath.relativize(p.getKey()), p.getValue())) {
+                            return false;
+                        }
 
-                    if (!acceptFile(adjustedPath, p.getValue())) {
-                        return false;
-                    }
+                        filesFound[0]++;
+                        return true;
+                    });
+                } catch (IOException ioe) {
+                    L.log(Level.WARNING, share + " had exception on fileWalker: " + ioe);
+                }
 
-                    filesFound[0]++;
-                    return true;
-                });
-            } catch (IOException ioe) {
-                L.log(Level.WARNING, share + " had exception on fileWalker: " + ioe);
-            }
-
-            L.log(Level.INFO, "Found " + filesFound[0] + " files on share: " + share);
+                L.log(Level.INFO, "Found " + filesFound[0] + " files on " + share);
+            });
         });
 
         //
@@ -206,31 +196,6 @@ public class Wight {
         }
 
         return true;
-    }
-
-    /**
-     * Reads the server information from a file named 'servers' inside the specified path.
-     * @param p Path to a folder containing the 'servers' information file.
-     * @throws IOException If file cannot be read. Parsing errors are handled by the function.
-     */
-    static void readServerList(final Path p) throws IOException {
-        BufferedReader reader;
-
-        reader = Files.newBufferedReader(p.resolve("servers"));
-        String line;
-
-        while ((line = reader.readLine()) != null) {
-            // We use "////" to split tokens since '/' is the only reserved character in a unix filename.
-            //
-            String[] tokens = line.split("////");
-            try {
-                servers.put(p.resolve(tokens[0]).toString(), tokens[1]);
-            } catch (ArrayIndexOutOfBoundsException e) {
-                L.log(Level.WARNING, "Incorrect 'servers' syntax: " + line);
-            }
-        }
-
-        reader.close();
     }
 
 }

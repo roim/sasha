@@ -4,6 +4,8 @@ import org.apache.lucene.document.*;
 
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Immutable file information. Contains a basic description of the file, and conveniences to help integrating
@@ -23,6 +25,13 @@ public class FileInfo {
     public final String Path;
     public final long Size;
 
+    private static Set<String> ACC_PROTOCOLS;
+    static {
+        ACC_PROTOCOLS = new HashSet<>();
+        ACC_PROTOCOLS.add("smb:");
+        ACC_PROTOCOLS.add("ftp:");
+    }
+
     public FileInfo(Path filePath, BasicFileAttributes attr) {
         this(filePath, attr.size());
     }
@@ -39,15 +48,23 @@ public class FileInfo {
             Extension = "";
         }
 
-        // At this point our path should be treated as a URL. This will adjust smb:/foo to smb://foo
+        Size = size;
+
+        // At this point our path should be treated as a URL. If the first name in the path is a protocol, we adjust it.
+        //     e.g., this will adjust smb:/foo to smb://foo
         //     notice that this won't break the filename standards, since '//' will be resolved back to '/'
         //     if we use this as a path.
         // We kept using java's Path and not URL up to this point, however, since SMB urls are not valid in Java.
         //
         String singleSlashPath = filePath.getParent().toString() + "/";
-        Path = singleSlashPath.replaceFirst(":/", "://");
+        if (!ACC_PROTOCOLS.contains(singleSlashPath.substring(0, singleSlashPath.indexOf("/")))) {
+            // Maybe we should just keep the path as it is instead of throwing an exception
+            throw new IllegalArgumentException("The first folder in the specified path does not represent" +
+                    " a valid protocol: " + filePath.toString() +
+                    " Did you forget the ':'?");
+        }
 
-        Size = size;
+        Path = singleSlashPath.replaceFirst("/", "//");
     }
 
     /**
