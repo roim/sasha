@@ -1,9 +1,9 @@
-package br.ita.roim.sasha.wight;
+package im.rro.sasha.wight;
 
-import br.ita.roim.sasha.common.FileInfo;
-import br.ita.roim.sasha.common.lucene.SashaAnalyzer;
-import br.ita.roim.sasha.wight.utils.FileScanner;
-import br.ita.roim.sasha.wight.utils.Parallel;
+import im.rro.sasha.common.FileInfo;
+import im.rro.sasha.common.lucene.SashaAnalyzer;
+import im.rro.sasha.wight.utils.FileScanner;
+import im.rro.sasha.wight.utils.Parallel;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;

@@ -1,4 +1,4 @@
-package br.ita.roim.sasha.wight.utils;
+package im.rro.sasha.wight.utils;
 
 import javafx.util.Pair;
 

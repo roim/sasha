@@ -1,4 +1,4 @@
-package br.ita.roim.sasha.common.lucene;
+package im.rro.sasha.common.lucene;
 
 import org.apache.lucene.analysis.util.CharTokenizer;
 import org.apache.lucene.util.Version;
