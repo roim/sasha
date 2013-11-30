@@ -1,4 +1,4 @@
-package br.ita.roim.sasha.common.lucene;
+package im.rro.sasha.common.lucene;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.util.Version;

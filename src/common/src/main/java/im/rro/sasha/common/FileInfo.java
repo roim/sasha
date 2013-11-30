@@ -1,4 +1,4 @@
-package br.ita.roim.sasha.common;
+package im.rro.sasha.common;
 
 import org.apache.lucene.document.*;
 

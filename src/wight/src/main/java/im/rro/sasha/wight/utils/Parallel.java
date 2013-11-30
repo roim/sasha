@@ -21,9 +21,9 @@
  * THE SOFTWARE.
  */
 
-package br.ita.roim.sasha.wight.utils;
+package im.rro.sasha.wight.utils;
 
-import br.ita.roim.sasha.wight.Wight;
+import im.rro.sasha.wight.Wight;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
