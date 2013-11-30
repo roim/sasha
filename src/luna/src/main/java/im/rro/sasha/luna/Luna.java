@@ -80,18 +80,18 @@ public class Luna {
             System.exit(103);
         }
 
-        HttpServer server;
+        HttpServer tempServer = null;
         try {
-            server = HttpServer.create(new InetSocketAddress(80), 0);
-            server.createContext("/search", new SearchRequestHandler());
-            server.setExecutor(null); // creates a default executor
-            server.start();
+            tempServer = HttpServer.create(new InetSocketAddress(80), 0);
+            tempServer.createContext("/search", new SearchRequestHandler());
+            tempServer.setExecutor(null); // creates a default executor
+            tempServer.start();
         } catch (IOException ioe) {
             L.log(Level.SEVERE, "Could not start the HTTP Server: " + ioe);
             System.err.println("(105) Could not start the HTTP Server! See the log for more information.");
             System.exit(105);
         }
-
+        final HttpServer server = tempServer;
 
         L.log(Level.INFO, "Search will be performed on index at " + indexPath);
 
@@ -102,12 +102,13 @@ public class Luna {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
+                server.stop(1);
+
                 try {
                     IR.close();
                 } catch (IOException ioe) {
                     L.log(Level.SEVERE, "Could not close the Index Reader: " + ioe);
-                    System.err.println("(104) Could not close the Index Reader! See the log for more information.");
-                    System.exit(104);
+                    return;
                 }
 
                 L.log(Level.INFO, "Server closed succesfully!");
