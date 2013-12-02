@@ -1,28 +1,34 @@
 import subprocess
 
+
+dalmatianPath = "./dalmatian.sh"
+wightPath = "./wight.jar"
+expireEntryTime = 96 # Time in hours to expire a file entry saved to the index
+
+
 def executeCommand(command):
 	proc = subprocess.Popen([command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	return proc.communicate()
 
 def getIps():
-	(out, err) = executeCommand("./dalmatian.sh scan")
+	(out, err) = executeCommand(dalmatianPath + " scan")
 
 	return out.split()
 
 def getTopFolders(ip):
-	(out, err) = executeCommand("./dalmatian.sh listu " + ip)
+	(out, err) = executeCommand(dalmatianPath + " listu " + ip)
 	
 	return out.split()
 
 def mount(ip, share):
 	print ("mount " + ip + " " + share)
-	(out, err) = executeCommand("./dalmatian.sh mount " + ip + " " + share)
+	(out, err) = executeCommand(dalmatianPath + " mount " + ip + " " + share)
 
 def unmount(ip, share):
-	(out, err) = executeCommand("./dalmatian.sh umount " + ip + " " + share)
+	(out, err) = executeCommand(dalmatianPath + " umount " + ip + " " + share)
 
 def callWight():
-	(out, err) =  executeCommand("./wight.jar")
+	(out, err) =  executeCommand(wightPath + " -clean 96")
 	print (out)
 
 # "./dalmatian.sh list 192.168.78.84
