@@ -4,18 +4,22 @@ import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import im.rro.sasha.common.FileInfo;
+import im.rro.sasha.common.lucene.SashaAnalyzer;
 import im.rro.sasha.luna.Luna;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.FuzzyQuery;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.spans.SpanMultiTermQueryWrapper;
 import org.apache.lucene.search.spans.SpanNearQuery;
 import org.apache.lucene.search.spans.SpanQuery;
+import org.apache.lucene.util.Version;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -44,19 +48,50 @@ public class SearchRequestHandler implements  HttpHandler{
             return;
         }
 
-        String[] terms = parameters.get("q").split("\\s+");
-        SpanQuery[] clauses = new SpanQuery[terms.length];
+        // The user input query is not tokenized nor normalized.
+        //   i.e. "foo bar" is a single term, also "foo" and "FOO" are not the same.
+        // However, we tokenized the data before adding it to the index, so now we should tokenize the input
+        //   in the same way before sending the query to lucene.
+        LinkedList<String> terms;
+        try {
+            terms = getAnalyzedTerms(parameters.get("q"));
+        } catch (IOException ioe) {
+            Luna.L.log(Level.SEVERE, "Error analyzing input terms:" +
+                            "\nURI: " + t.getRequestURI() +
+                            "\nTerms: " + parameters.get("q") +
+                            "\nException: " + ioe);
+            sendStringResponse(t, 500, "500: Internal server error.");
+            return;
+        }
+
+        // Each token will generate a fuzzy clause
+        // Fuzzy queries match similar words. e.g. 'grey' to 'gray'
+        SpanQuery[] clauses = new SpanQuery[terms.size()];
 
         {
             int i = 0;
             for ( String term : terms ) {
-                // Fuzzy query matches similar words. e.g. 'grey' to 'gray'
                 clauses[i++] = new SpanMultiTermQueryWrapper(new FuzzyQuery(new Term(FileInfo.ROW_FILE_NAME, term)));
             }
         }
 
         // SpanNearQuery finds occurrences of the clauses in close position to each other.
-        SpanNearQuery query = new SpanNearQuery(clauses, 1, false);
+        SpanNearQuery nameQuery = new SpanNearQuery(clauses, 1, false);
+
+        // Join the query for filename with the query for file extension, if it exists
+        String extension = parameters.containsKey("ext") ? parameters.get("ext") : "";
+
+        Query query;
+
+        if (extension.equals("")) {
+            query = nameQuery;
+        } else {
+            BooleanQuery bQuery = new BooleanQuery();
+            bQuery.add(nameQuery, BooleanClause.Occur.MUST);
+            bQuery.add(new TermQuery(new Term(FileInfo.ROW_EXTENSION, extension)), BooleanClause.Occur.MUST);
+
+            query = bQuery;
+        }
 
         // Search the index
         //
@@ -127,5 +162,21 @@ public class SearchRequestHandler implements  HttpHandler{
         }
 
         return result;
+    }
+
+    private LinkedList<String> getAnalyzedTerms(String rawTerms) throws IOException {
+        LinkedList<String> results = new LinkedList<>();
+        Analyzer analyzer = new SashaAnalyzer(Version.LUCENE_45);
+        TokenStream stream = analyzer.tokenStream(null, new StringReader(rawTerms));
+        CharTermAttribute cattr = stream.addAttribute(CharTermAttribute.class);
+
+        stream.reset();
+        while (stream.incrementToken()) {
+            results.add(cattr.toString());
+        }
+        stream.end();
+        stream.close();
+
+        return results;
     }
 }

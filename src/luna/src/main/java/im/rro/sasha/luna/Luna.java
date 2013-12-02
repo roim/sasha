@@ -95,7 +95,7 @@ public class Luna {
         //
         HttpServer tempServer = null;
         try {
-            tempServer = HttpServer.create(new InetSocketAddress(80), 0);
+            tempServer = HttpServer.create(new InetSocketAddress(8080), 0);
             tempServer.createContext("/search", new SearchRequestHandler());
             tempServer.setExecutor(null); // creates a default executor
             tempServer.start();
