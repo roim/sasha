@@ -1,19 +1,18 @@
 package im.rro.sasha.luna;
 
 import com.sun.net.httpserver.HttpServer;
-import im.rro.sasha.common.lucene.SashaAnalyzer;
 import im.rro.sasha.luna.handlers.SearchRequestHandler;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.Version;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,6 +24,8 @@ public class Luna {
     public final static Logger L = Logger.getLogger(Luna.class.getName());
 
     public static IndexSearcher IS = null;
+
+    public static final Object IndexSearcherLock = new Object();
 
     public static void main(String[] args) {
         //
@@ -59,6 +60,8 @@ public class Luna {
         // Setting things up
         //
 
+        // Logger
+        //
         try {
             String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
             FileHandler logFile = new FileHandler("luna_" + timestamp + ".log");
@@ -69,16 +72,27 @@ public class Luna {
             System.exit(101);
         }
 
-        Analyzer analyzer = new SashaAnalyzer(Version.LUCENE_45);
-        try {
-            Directory indexDir = FSDirectory.open(new java.io.File(indexPath));
-            IS = new IndexSearcher(DirectoryReader.open(indexDir));
-        } catch (IOException ioe) {
-            L.log(Level.SEVERE, "Could not open Lucene index at" + indexPath + ": " + ioe);
-            System.err.println("(103) Could not open the Lucene index! See the log for more information.");
-            System.exit(103);
-        }
+        // Index Searcher refresher
+        //
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                synchronized (IndexSearcherLock) {
+                    try {
+                        if (IS != null) IS.getIndexReader().close();
+                        Directory indexDir = FSDirectory.open(new java.io.File(indexPath));
+                        IS = new IndexSearcher(DirectoryReader.open(indexDir));
+                    } catch (IOException ioe) {
+                        L.log(Level.SEVERE, "Could not open Lucene index at" + indexPath + ": " + ioe);
+                        System.err.println("(103) Could not open the Lucene index! See the log for more information.");
+                        System.exit(103);
+                    }
+                }
+            }
+        }, 0, 1000*60*5);
 
+        // Http Server
+        //
         HttpServer tempServer = null;
         try {
             tempServer = HttpServer.create(new InetSocketAddress(80), 0);
@@ -94,10 +108,8 @@ public class Luna {
 
         L.log(Level.INFO, "Search will be performed on index at " + indexPath);
 
-        //
         // Shutdown hook
         //
-
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
