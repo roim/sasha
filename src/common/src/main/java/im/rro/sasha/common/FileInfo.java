@@ -2,6 +2,8 @@ package im.rro.sasha.common;
 
 import org.apache.lucene.document.*;
 
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlValue;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashSet;
@@ -20,9 +22,9 @@ public class FileInfo {
     public static final String ROW_PATH = "Path";
     public static final String ROW_SIZE = "Size";
 
-    public final String Extension;
-    public final String Name;
     public final String Path;
+    public final String Name;
+    public final String Extension;
     public final long Size;
 
     private static Set<String> ACC_PROTOCOLS;

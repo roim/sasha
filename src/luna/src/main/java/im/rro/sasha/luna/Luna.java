@@ -1,17 +1,16 @@
 package im.rro.sasha.luna;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import im.rro.sasha.common.lucene.SashaAnalyzer;
+import im.rro.sasha.luna.handlers.SearchRequestHandler;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -25,7 +24,7 @@ public class Luna {
 
     public final static Logger L = Logger.getLogger(Luna.class.getName());
 
-    private static IndexReader IR = null;
+    public static IndexSearcher IS = null;
 
     public static void main(String[] args) {
         //
@@ -73,7 +72,7 @@ public class Luna {
         Analyzer analyzer = new SashaAnalyzer(Version.LUCENE_45);
         try {
             Directory indexDir = FSDirectory.open(new java.io.File(indexPath));
-            IR = DirectoryReader.open(indexDir);
+            IS = new IndexSearcher(DirectoryReader.open(indexDir));
         } catch (IOException ioe) {
             L.log(Level.SEVERE, "Could not open Lucene index at" + indexPath + ": " + ioe);
             System.err.println("(103) Could not open the Lucene index! See the log for more information.");
@@ -96,7 +95,7 @@ public class Luna {
         L.log(Level.INFO, "Search will be performed on index at " + indexPath);
 
         //
-        // Shutting down
+        // Shutdown hook
         //
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -105,37 +104,15 @@ public class Luna {
                 server.stop(1);
 
                 try {
-                    IR.close();
+                    IS.getIndexReader().close();
                 } catch (IOException ioe) {
                     L.log(Level.SEVERE, "Could not close the Index Reader: " + ioe);
                     return;
                 }
 
-                L.log(Level.INFO, "Server closed succesfully!");
+                L.log(Level.INFO, "Server closed successfully!");
             }
         });
 
-    }
-
-    private static class SearchRequestHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange t) {
-            String response = "This is the response";
-
-            try {
-                t.sendResponseHeaders(200, response.length());
-            } catch (IOException ioe) {
-                L.log(Level.WARNING, "Error sending the response headers.");
-                return;
-            }
-
-            try {
-                OutputStream os = t.getResponseBody();
-                os.write(response.getBytes());
-                os.close();
-            } catch (IOException ioe) {
-                L.log(Level.WARNING, "Error sending the response.");
-            }
-        }
     }
 }
