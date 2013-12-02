@@ -37,3 +37,6 @@ configure
 # Eclipse
 .classpath
 .project
+
+# Logfiles
+.log
