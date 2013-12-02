@@ -28,7 +28,7 @@ def unmount(ip, share):
 	(out, err) = executeCommand(dalmatianPath + " umount " + ip + " " + share)
 
 def callWight():
-	(out, err) =  executeCommand(wightPath + " -clean 96")
+	(out, err) =  executeCommand(wightPath + " -clean " + expireEntryTime)
 	print (out)
 
 # "./dalmatian.sh list 192.168.78.84
