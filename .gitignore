@@ -39,4 +39,4 @@ configure
 .project
 
 # Logfiles
-.log
+*.log
