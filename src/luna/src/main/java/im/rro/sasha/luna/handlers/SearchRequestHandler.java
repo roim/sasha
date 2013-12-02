@@ -7,9 +7,7 @@ import im.rro.sasha.common.FileInfo;
 import im.rro.sasha.luna.Luna;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.FuzzyQuery;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.spans.SpanMultiTermQueryWrapper;
 import org.apache.lucene.search.spans.SpanNearQuery;
 import org.apache.lucene.search.spans.SpanQuery;
@@ -45,6 +43,7 @@ public class SearchRequestHandler implements  HttpHandler{
         }
 
         String[] terms = parameters.get("q").split("\\s+");
+
         SpanQuery[] clauses = new SpanQuery[terms.length];
 
         {
@@ -56,7 +55,22 @@ public class SearchRequestHandler implements  HttpHandler{
         }
 
         // SpanNearQuery finds occurrences of the clauses in close position to each other.
-        SpanNearQuery query = new SpanNearQuery(clauses, 1, false);
+        SpanNearQuery nameQuery = new SpanNearQuery(clauses, 1, false);
+
+        // Join the query for filename with the query for file extension, if it exists
+        String extension = parameters.containsKey("ext") ? parameters.get("ext") : "";
+
+        Query query;
+
+        if (extension.equals("")) {
+            query = nameQuery;
+        } else {
+            BooleanQuery bQuery = new BooleanQuery();
+            bQuery.add(nameQuery, BooleanClause.Occur.MUST);
+            bQuery.add(new TermQuery(new Term(FileInfo.ROW_EXTENSION, extension)), BooleanClause.Occur.MUST);
+
+            query = bQuery;
+        }
 
         // Search the index
         //
