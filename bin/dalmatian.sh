@@ -1,9 +1,9 @@
 #!/bin/sh
 
 # Copyright 
-#			Victor Franco 2013 ( victorfranco@aluno.ita.br )
+#           Victor Franco 2013 ( victorfranco@aluno.ita.br )
 #           Rodrigo Roim Ferreira 2013 ( rodrigo@rro.im )
-# 			Márcio Araújo de Paiva Filho 2013 ( marcioapf@gmail.com )
+#           Márcio Araújo de Paiva Filho 2013 ( marcioapf@gmail.com )
 # Dalmatian is a dog
 # But this Dalmatian is a tool to automatically mount Samba shares in a network, useful for crawling
 
