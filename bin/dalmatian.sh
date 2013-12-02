@@ -8,7 +8,7 @@
 # But this Dalmatian is a tool to automatically mount Samba shares in a network, useful for crawling
 
 SELF="$0"
-MountPath="."
+MountPath="./scan"
 
 findMachines(){ # Print IPs of online PCs in given subnet (format: IP/submask length)
     sudo nmap -sn "$1" --privileged | awk 'match($0, /192.([0-9]*\.)+[0-9]*/) {print substr($0, RSTART, RLENGTH)}'
@@ -45,6 +45,9 @@ case "$1" in
     list)  
         listFormated "$2"       
         ;;
+    listu)
+		list "$2"
+		;;
     mount)
         mountShare "$2" "$3"
         ;;
@@ -52,7 +55,7 @@ case "$1" in
         umountShare "$2" "$3"
         ;;
     *)
-        echo "Usage : $SELF [install|scan|list|mount|umount] [list computer]"
+        echo "Usage : $SELF [install|scan|list|listu|mount|umount] [list computer]"
         exit 1
         ;;
 esac    
