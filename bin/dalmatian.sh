@@ -1,7 +1,9 @@
 #!/bin/sh
 
-# Copyright Victor Franco 2013 ( victorfranco@aluno.ita.br )
+# Copyright 
+#			Victor Franco 2013 ( victorfranco@aluno.ita.br )
 #           Rodrigo Roim Ferreira 2013 ( rodrigo@rro.im )
+# 			Márcio Araújo de Paiva Filho 2013 ( marcioapf@gmail.com )
 # Dalmatian is a dog
 # But this Dalmatian is a tool to automatically mount Samba shares in a network, useful for crawling
 
@@ -21,11 +23,11 @@ listFormated(){ # List Samba Shares in a node in a fashion way
 }
 
 mountShare(){   # Mount Samba share in folder
-    mkdir --parents "$MountPath"/smb/"$1"/"$2"
+    mkdir --parents "$MountPath"/smb:/"$1"/"$2"
     sudo mount -t cifs \\\\"$1"\\"$2" "$MountPath"/smb:/"$1"/"$2" -o ro,guest
 }
 umountShare(){  # Unmount Samba share in folder
-    sudo umount "$MountPath"/smb/"$1"/"$2"
+    sudo umount "$MountPath"/smb:/"$1"/"$2"
     rmdir --ignore-fail-on-non-empty --parents "$MountPath"/smb:/"$1"/"$2"
 }
 
@@ -50,7 +52,7 @@ case "$1" in
         umountShare "$2" "$3"
         ;;
     *)
-        echo "Usage : $SELF [install|scan|list] [list computer]"
+        echo "Usage : $SELF [install|scan|list|mount|umount] [list computer]"
         exit 1
         ;;
 esac    
