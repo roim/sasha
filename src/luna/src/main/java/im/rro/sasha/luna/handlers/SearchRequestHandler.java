@@ -4,16 +4,22 @@ import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import im.rro.sasha.common.FileInfo;
+import im.rro.sasha.common.lucene.SashaAnalyzer;
 import im.rro.sasha.luna.Luna;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.spans.SpanMultiTermQueryWrapper;
 import org.apache.lucene.search.spans.SpanNearQuery;
 import org.apache.lucene.search.spans.SpanQuery;
+import org.apache.lucene.util.Version;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -42,14 +48,29 @@ public class SearchRequestHandler implements  HttpHandler{
             return;
         }
 
-        String[] terms = parameters.get("q").split("\\s+");
+        // The user input query is not tokenized nor normalized.
+        //   i.e. "foo bar" is a single term, also "foo" and "FOO" are not the same.
+        // However, we tokenized the data before adding it to the index, so now we should tokenize the input
+        //   in the same way before sending the query to lucene.
+        LinkedList<String> terms;
+        try {
+            terms = getAnalyzedTerms(parameters.get("q"));
+        } catch (IOException ioe) {
+            Luna.L.log(Level.SEVERE, "Error analyzing input terms:" +
+                            "\nURI: " + t.getRequestURI() +
+                            "\nTerms: " + parameters.get("q") +
+                            "\nException: " + ioe);
+            sendStringResponse(t, 500, "500: Internal server error.");
+            return;
+        }
 
-        SpanQuery[] clauses = new SpanQuery[terms.length];
+        // Each token will generate a fuzzy clause
+        // Fuzzy queries match similar words. e.g. 'grey' to 'gray'
+        SpanQuery[] clauses = new SpanQuery[terms.size()];
 
         {
             int i = 0;
             for ( String term : terms ) {
-                // Fuzzy query matches similar words. e.g. 'grey' to 'gray'
                 clauses[i++] = new SpanMultiTermQueryWrapper(new FuzzyQuery(new Term(FileInfo.ROW_FILE_NAME, term)));
             }
         }
@@ -141,5 +162,21 @@ public class SearchRequestHandler implements  HttpHandler{
         }
 
         return result;
+    }
+
+    private LinkedList<String> getAnalyzedTerms(String rawTerms) throws IOException {
+        LinkedList<String> results = new LinkedList<>();
+        Analyzer analyzer = new SashaAnalyzer(Version.LUCENE_45);
+        TokenStream stream = analyzer.tokenStream(null, new StringReader(rawTerms));
+        CharTermAttribute cattr = stream.addAttribute(CharTermAttribute.class);
+
+        stream.reset();
+        while (stream.incrementToken()) {
+            results.add(cattr.toString());
+        }
+        stream.end();
+        stream.close();
+
+        return results;
     }
 }
