@@ -4,13 +4,12 @@ import urllib2
 
 @get('/search')
 def search():
+    file = request.query.get("q", "")
+    extension = request.query.get("ext", "")
+
     search_hits = {}
     random_quote = ""
-    file = ""
-    extension = request.query["ext"] if 'ext' in request.query else ""
-
     if 'q' in request.query:
-        file = request.query["q"]
         search_hits = json.loads(urllib2.urlopen("http://localhost:8080/search?" + request.query_string).read())
     else:
         random_quote = json.loads(urllib2.urlopen("http://quotes.stormconsultancy.co.uk/random.json").read())
