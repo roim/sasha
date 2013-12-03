@@ -1,14 +1,10 @@
-import subprocess
+from common import executeCommand
 
 
 dalmatianPath = "./dalmatian.sh"
 wightPath = "./wight.jar"
 expireEntryTime = 96 # Time in hours to expire a file entry saved to the index
 
-
-def executeCommand(command):
-	proc = subprocess.Popen([command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-	return proc.communicate()
 
 def getIps():
 	(out, err) = executeCommand(dalmatianPath + " scan")
