@@ -31,6 +31,14 @@
 					<input class="form-control" type="submit">
 				</div>
 			</form>
+
+			<hr/>
+
+			<div>
+				{{quote["quote"]}}<br/>
+				{{quote["author"]}}
+			</div>
+
 	    </center>
 	</body>
 </html>
