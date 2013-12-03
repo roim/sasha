@@ -40,3 +40,6 @@ configure
 
 # Logfiles
 *.log
+
+#Python
+*.pyc
