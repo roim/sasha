@@ -6,7 +6,7 @@ import urllib2
 def search():
     if 'q' in request.query:
         search_hits = json.loads(urllib2.urlopen("http://localhost:8080/search?" + request.query_string).read())
-        return template('results', search_hits=search_hits)
+        return template('results', search_hits=search_hits, file=request.query["q"], extension=request.query["ext"])
     else:
         random_quote = json.loads(urllib2.urlopen("http://quotes.stormconsultancy.co.uk/random.json").read())
         return template('search', quote=random_quote)
