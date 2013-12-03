@@ -1,11 +1,8 @@
 #!/bin/sh
 
-# Copyright 
-#           Victor Franco 2013 ( victorfranco@aluno.ita.br )
-#           Rodrigo Roim Ferreira 2013 ( rodrigo@rro.im )
-#           Márcio Araújo de Paiva Filho 2013 ( marcioapf@gmail.com )
-# Dalmatian is a dog
-# But this Dalmatian is a tool to automatically mount Samba shares in a network, useful for crawling
+# A dalmatian is a dog
+# But this Dalmatian is a wrapper to unix utilities that find devices connected to a local network,
+#   list shares on a device, mont and unmount them.
 
 SELF="$0"
 MountPath="./scan"
@@ -14,7 +11,7 @@ findMachines(){ # Print IPs of online PCs in given subnet (format: IP/submask le
     sudo nmap -sn "$1" --privileged | awk 'match($0, /192.([0-9]*\.)+[0-9]*/) {print substr($0, RSTART, RLENGTH)}'
 }
 
-list(){     # List Samba Shares in a node
+list(){         # List Samba Shares in a node
     smbclient -gL \\"$1" --no-pass 2>/dev/null | awk -F\| '/Disk/ && $3=="" {print $2}';
 }
 
@@ -34,7 +31,7 @@ umountShare(){  # Unmount Samba share in folder
 case "$1" in
     install)
         PACKAGES="cifs-utils samba smbclient nmap"
-        echo "This script is about to install the packages \" "$PACKAGES" \" if not already installed in system"
+        echo "This script is about to install the packages \" "$PACKAGES" \" if not already installed in the system."
         for i in "$PACKAGES"
             do sudo apt-get install $i;
         done
@@ -46,8 +43,8 @@ case "$1" in
         listFormated "$2"       
         ;;
     listu)
-		list "$2"
-		;;
+        list "$2"
+        ;;
     mount)
         mountShare "$2" "$3"
         ;;
