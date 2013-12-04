@@ -138,7 +138,7 @@ public class SearchRequestHandler implements  HttpHandler{
 
     private void sendStringResponse(HttpExchange t, int statusCode, String response) {
         try {
-            t.sendResponseHeaders(statusCode, response.length());
+            t.sendResponseHeaders(statusCode, response.getBytes().length);
             OutputStream os = t.getResponseBody();
             os.write(response.getBytes());
             os.close();
