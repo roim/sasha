@@ -40,6 +40,10 @@ configure
 
 # Logfiles
 *.log
+*.log.lck
+
+#Indexes
+index/
 
 #Python
 *.pyc
