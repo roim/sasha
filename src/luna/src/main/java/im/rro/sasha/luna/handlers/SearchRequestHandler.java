@@ -99,7 +99,7 @@ public class SearchRequestHandler implements  HttpHandler{
         TopDocs searchResults;
 
         try {
-            searchResults = Luna.IS.search(query, 10);
+            searchResults = Luna.IS.search(query, 1000, Sort.RELEVANCE);
         } catch (IOException ioe) {
             Luna.L.log(Level.SEVERE, "Error querying the index." +
                     "\nURI: " + t.getRequestURI() +
