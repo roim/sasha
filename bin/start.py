@@ -1,14 +1,15 @@
 from common import executeCommand
+import revdns
 
 
 dalmatianPath = "./dalmatian.sh"
 wightPath = "./wight.jar"
 expireEntryTime = 96 # Time in hours to expire a file entry saved to the index
+refreshHostTime = 5 # Time in hours to rescan a host
 
 
 def getIps():
 	(out, err) = executeCommand(dalmatianPath + " scan")
-
 	return out.split()
 
 def getTopFolders(ip):
@@ -32,11 +33,16 @@ def callWight():
 ipcubo = "192.168.78.84"
 shares = getTopFolders('192.168.78.84')
 
-for i in xrange(0, len(shares), 4):
-	for share in shares[i:i+4] :
-		mount(ipcubo, share)
 
-	callWight()
+def cycleIps() :
+	for ip in getIps() :
+		hostname = revdns.getHostname(ip)
+		for i in xrange(0, len(shares), 4) :
 
-	for share in shares[i:i+4] :
-		unmount(ipcubo, share)
+			for share in shares[i:i+4] :
+				mount(ipcubo, share)
+
+			callWight()
+
+			for share in shares[i:i+4] :
+				unmount(ipcubo, share)
