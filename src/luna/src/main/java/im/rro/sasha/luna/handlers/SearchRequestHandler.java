@@ -64,26 +64,22 @@ public class SearchRequestHandler implements  HttpHandler{
             return;
         }
 
-        // Each token will generate a fuzzy clause
+        // Each token will generate a fuzzy query
         // Fuzzy queries match similar words. e.g. 'grey' to 'gray'
-        SpanQuery[] clauses = new SpanQuery[terms.size()];
+        BooleanQuery nameQuery = new BooleanQuery();
 
-        {
-            int i = 0;
-            for ( String term : terms ) {
-                clauses[i++] = new SpanMultiTermQueryWrapper<>(new FuzzyQuery(new Term(FileInfo.ROW_FILE_NAME, term)));
-            }
+        for ( String term : terms ) {
+            nameQuery.add(new FuzzyQuery(new Term(FileInfo.ROW_FILE_NAME, term)), BooleanClause.Occur.SHOULD);
         }
 
-        // SpanNearQuery finds occurrences of the clauses in close position to each other.
-        SpanNearQuery nameQuery = new SpanNearQuery(clauses, 1, false);
-
         // Join the query for filename with the query for file extension, if it exists
+        // Note that this will result in a new boolean query that include the previous nameQuery
+        //   this is done to ensure that nameQuery must happen.
+        //   (otherwise if the filename didn't match but the extension did, the result would still be valid)
         String extension = parameters.containsKey("ext") ? parameters.get("ext") : "";
         extension = extension.toLowerCase();
 
         Query query;
-
         if (extension.equals("")) {
             query = nameQuery;
         } else {
