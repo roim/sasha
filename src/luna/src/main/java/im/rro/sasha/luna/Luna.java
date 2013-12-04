@@ -1,11 +1,16 @@
 package im.rro.sasha.luna;
 
 import com.sun.net.httpserver.HttpServer;
+import im.rro.sasha.common.lucene.SashaAnalyzer;
 import im.rro.sasha.luna.handlers.SearchRequestHandler;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.Version;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -79,8 +84,16 @@ public class Luna {
             public void run() {
                 synchronized (IndexSearcherLock) {
                     try {
-                        if (IS != null) IS.getIndexReader().close();
                         Directory indexDir = FSDirectory.open(new java.io.File(indexPath));
+
+                        // Create an empty index if none exists
+                        if (!DirectoryReader.indexExists(indexDir)) {
+                            Analyzer analyzer = new SashaAnalyzer(Version.LUCENE_46);
+                            IndexWriterConfig iwc = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+                            new IndexWriter(indexDir, iwc).close();
+                        }
+
+                        if (IS != null) IS.getIndexReader().close();
                         IS = new IndexSearcher(DirectoryReader.open(indexDir));
                     } catch (IOException ioe) {
                         L.log(Level.SEVERE, "Could not open Lucene index at" + indexPath + ": " + ioe);

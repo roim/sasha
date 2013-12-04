@@ -2,8 +2,6 @@ package im.rro.sasha.common;
 
 import org.apache.lucene.document.*;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlValue;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashSet;
