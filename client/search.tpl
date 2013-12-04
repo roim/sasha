@@ -13,7 +13,7 @@
             <h1 style="font-family:&quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif;font-weight:500;line-height:1.1">Sasha</h1>
             <hr/>
 
-            <form class="form-inline well" style="width:600px">
+            <form class="form-inline" style="width:600px">
                 <fieldset>
                     <input type="text" name="q" class="input-small" placeholder="File" value="{{file}}" required="true" autofocus="true" style="height:30px;width:350px">
                     .
@@ -25,7 +25,7 @@
             % if file != "":
             <br/>
             <h1 style="font-family:&quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif;font-weight:500;line-height:1.1">Results</h1>
-            <table style="width:700px" cellspacing=10 cellpadding=5 class="table table-condensed">
+            <table style="width:700px" cellspacing=10 cellpadding=5 class="table table-hover well">
                 <thead>
                     <tr>
                         <th>File</th>
