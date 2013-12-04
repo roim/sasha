@@ -31,7 +31,7 @@ umountShare(){  # Unmount Samba share in folder
 case "$1" in
     install)
         PACKAGES="cifs-utils samba smbclient nmap"
-        echo "This script is about to install the packages \" "$PACKAGES" \" if not already installed in the system."
+        echo "Dalmatian script is about to install the packages \" "$PACKAGES" \" if not already installed in the system."
         for i in "$PACKAGES"
             do sudo apt-get install $i;
         done
