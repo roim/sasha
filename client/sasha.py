@@ -16,4 +16,4 @@ def search():
 
     return template('search', search_hits=search_hits, file=file, extension=extension, quote=random_quote)
 
-run(host='localhost', port=80)
+run(host='0.0.0.0', port=80)
