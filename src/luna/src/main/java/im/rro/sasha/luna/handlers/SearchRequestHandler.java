@@ -80,6 +80,7 @@ public class SearchRequestHandler implements  HttpHandler{
 
         // Join the query for filename with the query for file extension, if it exists
         String extension = parameters.containsKey("ext") ? parameters.get("ext") : "";
+        extension = extension.toLowerCase();
 
         Query query;
 
@@ -112,7 +113,7 @@ public class SearchRequestHandler implements  HttpHandler{
         //
         LinkedList<FileInfo> results = new LinkedList<>();
         for ( ScoreDoc sd : searchResults.scoreDocs) {
-            Path filePath = null;
+            Path filePath;
 
             try {
                 Document hit = Luna.IS.doc(sd.doc);
@@ -124,7 +125,6 @@ public class SearchRequestHandler implements  HttpHandler{
                 Luna.L.log(Level.SEVERE, "Error querying the index." +
                         "\nURI: " + t.getRequestURI() +
                         "\nQuery: " + parameters.get("q") +
-                        "\nResult path: " + filePath +
                         "\nException: " + ioe);
                 sendStringResponse(t, 500, "500: Internal server error.");
                 return;

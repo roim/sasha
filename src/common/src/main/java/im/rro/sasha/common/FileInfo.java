@@ -44,7 +44,7 @@ public class FileInfo {
 
         if (lastDotIndex >= 0) {
             Name = fileNameExtension.substring(0, lastDotIndex);
-            Extension = fileNameExtension.substring(lastDotIndex);
+            Extension = fileNameExtension.substring(lastDotIndex).toLowerCase();
         } else {
             Name = fileNameExtension;
             Extension = "";
