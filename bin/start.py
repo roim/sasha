@@ -1,6 +1,6 @@
 from common import *
 from datetime import datetime
-import revdns
+import revdns, time
 
 
 dalmatianPath = "./dalmatian.sh"
@@ -8,6 +8,7 @@ wightPath = "./wight.jar"
 lunaPath = "./luna.jar"
 expireEntryTime = 96 # Time in hours to expire a file entry saved to the index
 refreshHostTime = 5 # Time in hours to rescan a host
+minimumNmapTime = 5 # Minimum time in minutes between full nmaps (getIps) 
 
 
 def getIps():
@@ -62,6 +63,15 @@ def scanHost(hostname):
 			unmount(hostname, share)
 
 if __name__ ==  "__main__":
+	print("If you want to start the http server, you should also start \'sacha.py\' under client/")
+	startLuna()
+	# startClient()
 	timeScannedHost = {}
 	while(True):
+		timeLastCycle = datetime.now()
+
 		cycleIps()
+
+		secondsDelta = (datetime.now() - timeLastCycle).total_seconds()
+		if ( secondsDelta < minimumNmapTime*60):
+			time.sleep(minimumNmapTime*60 - secondsDelta)
