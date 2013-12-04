@@ -1,3 +1,4 @@
+import logging
 from common import *
 from datetime import datetime
 import revdns, time
@@ -11,32 +12,40 @@ refreshHostTime = 5 # Time in hours to rescan a host
 minimumNmapTime = 5 # Minimum time in minutes between full nmaps (getIps) 
 
 
+
+
 def getIps():
-	(out, err) = executeCommand(dalmatianPath + " scan")
+	scancmd = dalmatianPath + " scan"
+	(out, err) = executeCommand(scancmd)
 	return out.split()
 
 def getTopFolders(ip):
-	(out, err) = executeCommand(dalmatianPath + " listu " + ip)
+	listucmd = dalmatianPath + " listu " + ip
+	(out, err) = executeCommand(listucmd)
 	return out.split()
 
 def mount(ip, share):
-	print ("mount " + ip + " " + share)
-	(out, err) = executeCommand(dalmatianPath + " mount " + ip + " " + share)
+	mountcmd = dalmatianPath + " mount " + ip + " " + share
+	(out, err) = executeCommand(mountcmd)
 
 def unmount(ip, share):
-	(out, err) = executeCommand(dalmatianPath + " umount " + ip + " " + share)
+	umountcmd = dalmatianPath + " umount " + ip + " " + share
+	(out, err) = executeCommand(umountcmd)
 
 def callWight():
-	print ("Starting WIGHT")
+	logging.info("Calling wight")
 	(out, err) =  executeCommand(wightPath + " -clean " + str(expireEntryTime))
-	print(out)
-	print ("Exiting WIGHT")
+	logging.debug("out: " + out)
+	logging.debug("err: " + err)
+	logging.info("Finished wight")
 
 def startLuna():
 	executeParallelCommand(lunaPath)
+	logging.info("Started luna")
 
 
 def cycleIps():
+	logging.info("Starting a full cycle through all ips")
 	for ip in getIps():
 		hostname = revdns.getHostname(ip)
 
@@ -50,20 +59,30 @@ def cycleIps():
 def scanHost(hostname):
 	timeScannedHost[hostname] = datetime.now()
 	shares = getTopFolders(hostname)
-	print ("Found " + str(len(shares)) + " top folders at " + hostname)
+
+	logging.info("Found " + str(len(shares)) + " shares at " + hostname)
+
+	if (len(shares) == 0):
+		return
+
+	logging.info("Starting mounting and indexing")
 
 	for i in xrange(0, len(shares), 4):
 
 		for share in shares[i:i+4]:
 			mount(hostname, share)
 
+		logging.debug("")
 		callWight()
 
 		for share in shares[i:i+4]:
 			unmount(hostname, share)
 
+	logging.info("Finished indexing all shares in " + hostname)
+
 if __name__ ==  "__main__":
-	print("If you want to start the http server, you should also start \'sacha.py\' under client/")
+	print("If you want to start the http server, you should also start \'sasha.py\' under client/")
+	logging.basicConfig(level=logging.DEBUG)
 	startLuna()
 	# startClient()
 	timeScannedHost = {}
