@@ -71,7 +71,7 @@ public class SearchRequestHandler implements  HttpHandler{
         {
             int i = 0;
             for ( String term : terms ) {
-                clauses[i++] = new SpanMultiTermQueryWrapper(new FuzzyQuery(new Term(FileInfo.ROW_FILE_NAME, term)));
+                clauses[i++] = new SpanMultiTermQueryWrapper<>(new FuzzyQuery(new Term(FileInfo.ROW_FILE_NAME, term)));
             }
         }
 
@@ -166,7 +166,7 @@ public class SearchRequestHandler implements  HttpHandler{
 
     private LinkedList<String> getAnalyzedTerms(String rawTerms) throws IOException {
         LinkedList<String> results = new LinkedList<>();
-        Analyzer analyzer = new SashaAnalyzer(Version.LUCENE_45);
+        Analyzer analyzer = new SashaAnalyzer(Version.LUCENE_46);
         TokenStream stream = analyzer.tokenStream(null, new StringReader(rawTerms));
         CharTermAttribute cattr = stream.addAttribute(CharTermAttribute.class);
 

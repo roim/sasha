@@ -96,8 +96,8 @@ public class Wight {
 
         try {
             Directory indexDir = FSDirectory.open(new java.io.File(indexPath));
-            Analyzer analyzer = new SashaAnalyzer(Version.LUCENE_45);
-            IndexWriterConfig iwc = new IndexWriterConfig(Version.LUCENE_45, analyzer);
+            Analyzer analyzer = new SashaAnalyzer(Version.LUCENE_46);
+            IndexWriterConfig iwc = new IndexWriterConfig(Version.LUCENE_46, analyzer);
             IW = new IndexWriter(indexDir, iwc);
         } catch (IOException ioe) {
             L.log(Level.SEVERE, "Could not open Lucene index at" + indexPath + ": " + ioe);
