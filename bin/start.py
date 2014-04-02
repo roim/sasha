@@ -63,7 +63,7 @@ def scanHost(hostname):
 			unmount(hostname, share)
 
 if __name__ ==  "__main__":
-	print("If you want to start the http server, you should also start \'sacha.py\' under client/")
+	print("If you want to start the http server, you should also start \'sasha.py\' under client/")
 	startLuna()
 	# startClient()
 	timeScannedHost = {}
