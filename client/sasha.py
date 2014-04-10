@@ -2,7 +2,7 @@ from bottle import *
 import json
 import urllib2
 
-@get('/search')
+@get('/')
 def search():
     file = request.query.get("q", "")
     extension = request.query.get("ext", "")
