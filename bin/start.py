@@ -4,8 +4,8 @@ import revdns, time
 
 
 dalmatianPath = "./dalmatian.sh"
-wightPath = "./wight.jar"
-lunaPath = "./luna.jar"
+wightPath = "java -jar ./wight.jar"
+lunaPath = "java -jar ./luna.jar"
 expireEntryTime = 96 # Time in hours to expire a file entry saved to the index
 refreshHostTime = 5 # Time in hours to rescan a host
 minimumNmapTime = 5 # Minimum time in minutes between full nmaps (getIps) 
@@ -17,14 +17,17 @@ def getIps():
 
 def getTopFolders(ip):
 	(out, err) = executeCommand(dalmatianPath + " listu " + ip)
-	return out.split()
+	shares = out.split("\n")
+	# Split \n returns sometimes returns empty strings
+	shares.remove("")
+	return shares
 
 def mount(ip, share):
 	print ("mount " + ip + " " + share)
-	(out, err) = executeCommand(dalmatianPath + " mount " + ip + " " + share)
+	(out, err) = executeCommand(dalmatianPath + " mount " + ip + " \"" + share + "\"")
 
 def unmount(ip, share):
-	(out, err) = executeCommand(dalmatianPath + " umount " + ip + " " + share)
+	(out, err) = executeCommand(dalmatianPath + " umount " + ip + " \"" + share + "\"")
 
 def callWight():
 	print ("Starting WIGHT")
